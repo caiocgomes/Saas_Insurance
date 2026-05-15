@@ -2,6 +2,8 @@
 
 Companion code for the arXiv preprint *Your SaaS Is an Insurance Product: A Modeling Framework* (Caio Gomes, Magalu, May 2026). This repository reproduces every figure and data table in the paper.
 
+![](https://zenodo.org/badge/DOI/10.5281/zenodo.20213156.svg)
+
 ## Stack
 
 - Python 3.11+
