@@ -1,57 +1,49 @@
-# sims/ — Monte Carlo simulations for the paper
+# Saas_Insurance — Monte Carlo simulations for *Your SaaS Is an Insurance Product*
 
-Reproducible code for the worked example in §4.7 of the paper and the
-sensitivity figures referenced in §4.4 and §4.2.
+Companion code for the arXiv preprint *Your SaaS Is an Insurance Product: A Modeling Framework* (Caio Gomes, Magalu, May 2026). This repository reproduces every figure and data table in the paper.
 
 ## Stack
 
 - Python 3.11+
 - [`uv`](https://docs.astral.sh/uv/) for environment and lockfile
-- numpy, scipy, pandas, matplotlib only
+- `numpy`, `scipy`, `pandas`, `matplotlib`
 
 ## Setup
 
 ```bash
-cd sims
+git clone https://github.com/caiocgomes/Saas_Insurance.git
+cd Saas_Insurance
 uv sync
 ```
 
 ## Reproduce all figures and tables
 
 ```bash
-uv run python figures/fig_aggregate_cost_distribution.py   # Figure 1
-uv run python figures/fig_reserve_by_portfolio_size.py     # Figure 2
-uv run python studies/study_censoring_bias.py              # §4.2 numbers
-uv run python tables/tab_reserve_comparison.py             # Table 2 (baseline)
-uv run python studies/study_policy_alternatives.py         # Table 3 (stress policy)
-uv run python studies/study_mixed_population.py            # Table 5 (heterogeneity)
-uv run python studies/study_vercel.py                      # Table 4 (Vercel overage)
+uv run python figures/fig_aggregate_cost_distribution.py   # Figure 1 (§4.7 aggregate density)
+uv run python figures/fig_reserve_by_portfolio_size.py     # Figure 2 (§4.7 reserve by n)
+uv run python studies/study_censoring_bias.py              # §4.2 numeric report (stdout)
+uv run python studies/study_vercel.py                      # Table 2 (Vercel overage)
+uv run python studies/study_mixed_population.py            # Table 3 (mixed-population)
+uv run python tables/tab_reserve_comparison.py             # Table 4 (baseline reserve)
+uv run python studies/study_policy_alternatives.py         # Table 5 (stress policy)
 ```
 
-Output lands in `output/`. Figures are PDF (vector) for direct inclusion in
-the arXiv LaTeX build. Tables are CSV.
+Output lands in `output/`. Figures are PDF (vector) for direct inclusion in the arXiv LaTeX build. Tables are CSV.
 
 ## Reproducibility
 
-- All randomness flows through a single `numpy.random.Generator` seeded by
-  `default_scenario().seed` (`20260515`). Sub-experiments derive deterministic
-  sub-seeds from this value.
-- `pyproject.toml` pins minimum versions; `uv.lock` (committed) pins exact
-  versions. To reproduce bit-for-bit, run `uv sync --frozen`.
+- All randomness flows through a single `numpy.random.Generator` seeded by `default_scenario().seed` (`20260515`). Sub-experiments derive deterministic sub-seeds from this value.
+- `pyproject.toml` pins minimum versions; `uv.lock` (committed) pins exact versions. To reproduce bit-for-bit, run `uv sync --frozen`.
 
 ## Calibration
 
-Each table in the paper has its own calibrated scenario. Per-script docstrings
-state the parameters used and how they were chosen. Parameters are illustrative
-orders-of-magnitude consistent with publicly posted Anthropic, OpenAI, Vercel,
-Cloudflare, and Supabase pricing as of May 2026. None are estimates from
-proprietary data.
+Each table in the paper has its own calibrated scenario. Per-script docstrings state the parameters used and how they were chosen. Parameters are illustrative orders-of-magnitude consistent with publicly posted Anthropic, OpenAI, Vercel, Cloudflare, and Supabase pricing as of May 2026. None are estimates from proprietary data.
 
 Reference scenarios in `src/saas_actuaria/calibration.py`:
 
-- `default_scenario()` — Claude Code Max 20x-like, matched-mean baseline. Premium $50/week, cap $1,000/week, expected per-user uncapped consumption $30/week. Drives Table 4 in the paper.
-- `heavy_consumption_scenario()` — same product context with deliberately heavy users (~$760/week expected uncapped). Drives Table 5 (policy alternatives stress).
-- `vercel_scenario()` — Vercel Pro-like overage regime. Premium $20/period, cap $1,000 retail-equivalent. Drives Table 2.
+- `default_scenario()` — Claude Code Max 20x-like, matched-mean baseline. Premium \$50/week, cap \$1,000/week, expected per-user uncapped consumption \$30/week. Drives **Table 4** (baseline reserve) and **Table 3** (mixed-population, light/power segments calibrated to match this mean).
+- `heavy_consumption_scenario()` — same product context with deliberately heavy users (~\$760/week expected uncapped). Drives **Table 5** (policy alternatives stress).
+- `vercel_scenario()` — Vercel Pro-like overage regime. Premium \$20/period, cap \$1,000 retail-equivalent. Drives **Table 2** (Vercel two-cohort overage).
 
 Pricing sources used to set magnitudes (URLs as of May 2026):
 
@@ -65,29 +57,27 @@ Pricing sources used to set magnitudes (URLs as of May 2026):
 ## Layout
 
 ```
-sims/
+Saas_Insurance/
 ├── pyproject.toml
+├── uv.lock
 ├── README.md
 ├── src/saas_actuaria/
-│   ├── models.py          PoissonGamma and NBLogNormal compound generators
+│   ├── models.py          PoissonGamma, NBLogNormal, MixedPopulation generators
 │   ├── metrics.py         VaR, TVaR, reserve, loss ratio
-│   └── calibration.py     Default scenario
+│   └── calibration.py     default_scenario, heavy_consumption_scenario, vercel_scenario
 ├── figures/
-│   ├── fig_aggregate_cost_distribution.py
-│   └── fig_reserve_by_portfolio_size.py
+│   ├── fig_aggregate_cost_distribution.py     Figure 1
+│   └── fig_reserve_by_portfolio_size.py       Figure 2
 ├── studies/
-│   └── study_censoring_bias.py
-├── studies/
-│   ├── study_censoring_bias.py         Tobit MLE vs naive on capped LogNormal
-│   ├── study_policy_alternatives.py    Counterfactual cap/no-cap/pay-per-use comparison
-│   ├── study_mixed_population.py       Heterogeneity / adverse-selection simulation
-│   └── study_vercel.py                 Overage-regime Monte Carlo (Vercel-like)
+│   ├── study_censoring_bias.py                §4.2 (Tobit MLE vs naive on capped LogNormal)
+│   ├── study_vercel.py                        Table 2 (Vercel overage)
+│   ├── study_mixed_population.py              Table 3 (heterogeneity / adverse selection)
+│   └── study_policy_alternatives.py           Table 5 (counterfactual policies, stress)
 ├── tables/
-│   └── tab_reserve_comparison.py       Table 2 (matched-mean tail comparison)
-└── output/                Generated PDFs and CSVs (gitignored)
+│   └── tab_reserve_comparison.py              Table 4 (matched-mean tail comparison)
+└── output/                                    Generated PDFs and CSVs (gitignored)
 ```
 
 ## Data policy
 
-Zero proprietary data. All pricing references are public posts; all parameters
-are illustrative and stated explicitly in `calibration.py`.
+Zero proprietary data. All pricing references are public posts; all parameters are illustrative and stated explicitly in `calibration.py`.
